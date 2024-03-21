@@ -1,0 +1,81 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © truepenny
+
+//@version=5
+indicator("Table of Fundamental Data & Ratios", overlay = true)
+ROIC = request.financial(syminfo.tickerid, "RETURN_ON_INVESTED_CAPITAL", "FQ")
+
+CapitalExpenditure = request.financial(syminfo.tickerid, "CAPITAL_EXPENDITURES", "FQ")
+AccumulatedDepreciation = request.financial(syminfo.tickerid, "ACCUM_DEPREC_TOTAL", "FQ")
+NetCapex = -1 * CapitalExpenditure + AccumulatedDepreciation
+ChangeInWorkingCapital = request.financial(syminfo.tickerid, "CHANGES_IN_WORKING_CAPITAL", "FQ")
+OperatingIncome = request.financial(syminfo.tickerid, "OPER_INCOME", "FQ")
+Taxes = request.financial(syminfo.tickerid, "INCOME_TAX", "FQ")
+NOPAX = OperatingIncome - Taxes
+ReinvestmentRate = (NetCapex + ChangeInWorkingCapital) / NOPAX
+
+Altman = request.financial(syminfo.tickerid, "ALTMAN_Z_SCORE", "FQ")
+Piotrosky = request.financial(syminfo.tickerid, "PIOTROSKI_F_SCORE", "FQ")
+ROE = request.financial(syminfo.tickerid, "RETURN_ON_EQUITY", "FQ")
+ROA = request.financial(syminfo.tickerid, "RETURN_ON_ASSETS", "FQ")
+CurrentRatio = request.financial(syminfo.tickerid, "CURRENT_RATIO", "FQ")
+QuickRatio = request.financial(syminfo.tickerid, "QUICK_RATIO", "FQ")
+
+RevenueEstimates = request.financial(syminfo.tickerid, "SALES_ESTIMATES", "FQ")
+TotalRevenue = request.financial(syminfo.tickerid, "TOTAL_REVENUE", "FQ")
+GuidedRevenueGrowth = (RevenueEstimates - TotalRevenue) * 100 / TotalRevenue
+
+DebtToAssets = request.financial(syminfo.tickerid, "DEBT_TO_ASSET", "FQ")
+
+CashFromOperations = request.financial(syminfo.tickerid, "CASH_F_OPERATING_ACTIVITIES", "FQ")
+CapitalExpenditureCoverageRatio = CashFromOperations / CapitalExpenditure
+
+InterestCoverage = request.financial(syminfo.tickerid, "INTERST_COVER", "FQ")
+
+
+    
+var testTable = table.new(position = position.bottom_right, columns = 12, rows = 4)
+table.merge_cells(table_id = testTable, start_column = 0, start_row = 0, end_column = 5, end_row = 0)
+table.merge_cells(table_id = testTable, start_column = 6, start_row = 0, end_column = 11, end_row = 0)
+if barstate.islast
+    table.cell(table_id = testTable, column = 0, row = 0, text = "Growth Sustainability", bgcolor = color.rgb(47,85,151), text_color = color.white)
+    table.cell(table_id = testTable, column = 6, row = 0, text = "Solvency", bgcolor = color.rgb(51,63,80), text_color = color.white)
+
+    table.cell(table_id = testTable, column = 0, row = 1, text = "ROIC", bgcolor = color.rgb(218,239,245), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 1, row = 1, text = str.tostring(ROIC,'#.##'), bgcolor = color.rgb(218,239,245), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 2, row = 1, text = ROIC<10?"🔴":ROIC>=10 and ROIC<17?"🟡":ROIC>=17?"🟢":"⚫️", bgcolor = color.rgb(218,239,245), text_color = color.black)
+    table.cell(table_id = testTable, column = 3, row = 1, text = "Reinvestment Rate", bgcolor = color.rgb(218,239,245), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 4, row = 1, text = str.tostring(ReinvestmentRate,'#.##'), bgcolor = color.rgb(218,239,245), text_color = color.black, text_halign = text.align_left)    
+    table.cell(table_id = testTable, column = 5, row = 1, text = ReinvestmentRate<10?"🔴":ReinvestmentRate>=10 and ReinvestmentRate<15?"🟡":ReinvestmentRate>=15?"🟢":"⚫️", bgcolor = color.rgb(218,239,245), text_color = color.black)
+    table.cell(table_id = testTable, column = 6, row = 1, text = "Altman Z-Score", bgcolor = color.rgb(173,185,202), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 7, row = 1, text = str.tostring(Altman,'#.##'), bgcolor = color.rgb(173,185,202), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 8, row = 1, text = Altman<1.8?"🔴":Altman>=1.8 and Altman<3.0?"🟡":Altman>=3.0?"🟢":"⚫️", bgcolor = color.rgb(173,185,202), text_color = color.black)
+    table.cell(table_id = testTable, column = 9, row = 1, text = "Piotrosky F-Score", bgcolor = color.rgb(173,185,202), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 10, row = 1, text = str.tostring(Piotrosky,'#.##'), bgcolor = color.rgb(173,185,202), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 11, row = 1, text = Piotrosky<=3?"🔴":Piotrosky>=4 and Piotrosky<=7?"🟡":Piotrosky>=8?"🟢":"⚫️", bgcolor = color.rgb(173,185,202), text_color = color.black)
+
+    table.cell(table_id = testTable, column = 0, row = 2, text = "ROE", bgcolor = color.rgb(218,239,245), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 1, row = 2, text = str.tostring(ROE,'#.##'), bgcolor = color.rgb(218,239,245), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 2, row = 2, text = ROE<10?"🔴":ROE>=10 and ROE<15?"🟡":ROE>=15?"🟢":"⚫️", bgcolor = color.rgb(218,239,245), text_color = color.black)
+    table.cell(table_id = testTable, column = 3, row = 2, text = "ROA", bgcolor = color.rgb(218,239,245), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 4, row = 2, text = str.tostring(ROA,'#.##'), bgcolor = color.rgb(218,239,245), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 5, row = 2, text = ROA<1.0?"🔴":ROA>=1.0 and ROA<5.0?"🟡":ROA>=5.0?"🟢":"⚫️", bgcolor = color.rgb(218,239,245), text_color = color.black)
+    table.cell(table_id = testTable, column = 6, row = 2, text = "Current Ratio", bgcolor = color.rgb(173,185,202), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 7, row = 2, text = str.tostring(CurrentRatio,'#.##'), bgcolor = color.rgb(173,185,202), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 8, row = 2, text = CurrentRatio<1.0?"🔴":CurrentRatio>=1.0 and CurrentRatio<1.2?"🟡":CurrentRatio>=1.2?"🟢":"⚫️", bgcolor = color.rgb(173,185,202), text_color = color.black)
+    table.cell(table_id = testTable, column = 9, row = 2, text = "Quick Ratio", bgcolor = color.rgb(173,185,202), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 10, row = 2, text = str.tostring(QuickRatio,'#.##'), bgcolor = color.rgb(173,185,202), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 11, row = 2, text = QuickRatio<0.8?"🔴":QuickRatio>=0.8 and QuickRatio<1.2?"🟡":QuickRatio>=1.2?"🟢":"⚫️", bgcolor = color.rgb(173,185,202), text_color = color.black)
+
+    table.cell(table_id = testTable, column = 0, row = 3, text = "Guided Revenue Growth", bgcolor = color.rgb(218,239,245), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 1, row = 3, text = str.tostring(GuidedRevenueGrowth,'#.##'), bgcolor = color.rgb(218,239,245), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 2, row = 3, text = GuidedRevenueGrowth<0?"🔴":GuidedRevenueGrowth>=0 and GuidedRevenueGrowth<5?"🟡":GuidedRevenueGrowth>=5?"🟢":"⚫️", bgcolor = color.rgb(218,239,245), text_color = color.black)
+    table.cell(table_id = testTable, column = 3, row = 3, text = "Debt - Asset Ratio", bgcolor = color.rgb(218,239,245), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 4, row = 3, text = str.tostring(DebtToAssets,'#.##'), bgcolor = color.rgb(218,239,245), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 5, row = 3, text = DebtToAssets>50?"🔴":DebtToAssets>=30 and DebtToAssets<50?"🟡":DebtToAssets<30?"🟢":"⚫️", bgcolor = color.rgb(218,239,245), text_color = color.black)
+    table.cell(table_id = testTable, column = 6, row = 3, text = "Capital Expenditure Coverage Ratio ", bgcolor = color.rgb(173,185,202), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 7, row = 3, text = str.tostring(CapitalExpenditureCoverageRatio,'#.##'), bgcolor = color.rgb(173,185,202), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 8, row = 3, text = CapitalExpenditureCoverageRatio<1.0?"🔴":CapitalExpenditureCoverageRatio>=1.0 and CapitalExpenditureCoverageRatio<1.5?"🟡":CapitalExpenditureCoverageRatio>=1.5?"🟢":"⚫️", bgcolor = color.rgb(173,185,202), text_color = color.black)
+    table.cell(table_id = testTable, column = 9, row = 3, text = "Interest Coverge", bgcolor = color.rgb(173,185,202), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 10, row = 3, text = str.tostring(InterestCoverage,'#.##'), bgcolor = color.rgb(173,185,202), text_color = color.black, text_halign = text.align_left)
+    table.cell(table_id = testTable, column = 11, row = 3, text = InterestCoverage<1.5?"🔴":InterestCoverage>=1.5 and InterestCoverage<2.5?"🟡":InterestCoverage>=2.5?"🟢":"⚫️", bgcolor = color.rgb(173,185,202), text_color = color.black)
